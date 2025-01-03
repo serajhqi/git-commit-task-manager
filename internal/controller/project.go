@@ -17,11 +17,11 @@ func NewProjectController() ProjectController {
 
 func AddProject(ctx context.Context, req *types.CreateProjectRequest) (*lc.RespWithBody[types.ProjectDTO], error) {
 
+	var createdBy int64 = 1
 	project, err := repository.Create(ctx, types.ProjectEntity{
-		Name:        req.Name,
-		Description: req.Description,
-		CreatedBy:   0,
-		CreatedAt:   time.Time{},
+		Name:        req.Body.Name,
+		Description: req.Body.Description,
+		CreatedBy:   createdBy,
 	})
 
 	if err != nil {

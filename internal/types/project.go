@@ -23,8 +23,10 @@ type ProjectDTO struct {
 
 // ---
 type CreateProjectRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Body struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
 }
 
 // ---

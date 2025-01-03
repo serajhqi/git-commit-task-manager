@@ -2,6 +2,7 @@ package route
 
 import (
 	"git-project-management/internal/controller"
+	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -10,14 +11,14 @@ func SetupProject(api huma.API) {
 
 	_ = controller.NewProjectController()
 
-	// huma.Register(*api, huma.Operation{
-	// 	OperationID: "add-task",
-	// 	Method:      http.MethodPost,
-	// 	Path:        "/projects/{id}/task",
-	// 	Summary:     "add task",
-	// 	Description: "",
-	// 	Tags:        []string{"Project"},
-	// }, controller.addTask)
+	huma.Register(api, huma.Operation{
+		OperationID: "add-task",
+		Method:      http.MethodPost,
+		Path:        "/projects",
+		Summary:     "add project",
+		Description: "",
+		Tags:        []string{"Project"},
+	}, controller.AddProject)
 
 	// huma.Register(*api, huma.Operation{
 	// 	OperationID: "get-one-project",
@@ -28,14 +29,14 @@ func SetupProject(api huma.API) {
 	// 	Tags:        []string{"Project"},
 	// }, controller.getOne)
 
-	// huma.Register(*api, huma.Operation{
-	// 	OperationID: "get-all-projects",
-	// 	Method:      http.MethodGet,
-	// 	Path:        "/projects",
-	// 	Summary:     "all projects",
-	// 	Description: "",
-	// 	Tags:        []string{"Project"},
-	// }, controller.getAll)
+	huma.Register(api, huma.Operation{
+		OperationID: "get-all-projects",
+		Method:      http.MethodGet,
+		Path:        "/projects",
+		Summary:     "all projects",
+		Description: "",
+		Tags:        []string{"Project"},
+	}, controller.GetProjects)
 
 	// huma.Register(*api, huma.Operation{
 	// 	OperationID: "get-all-tasks",
