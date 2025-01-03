@@ -1,4 +1,4 @@
-package task
+package controller
 
 import (
 	"context"
@@ -8,14 +8,11 @@ import (
 	"github.com/go-pg/pg/v10"
 )
 
-type Controller struct {
-	repo *Repo
+type TaskController struct {
 }
 
-func NewController(repo *Repo) *Controller {
-	return &Controller{
-		repo: repo,
-	}
+func NewTaskController() *TaskController {
+	return &TaskController{}
 }
 
 func (c *Controller) getOne(_ context.Context, req *GetOneRequest) (*GetOneResponse, error) {

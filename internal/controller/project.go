@@ -1,4 +1,4 @@
-package project
+package controller
 
 import (
 	"context"
@@ -9,14 +9,11 @@ import (
 	"github.com/go-pg/pg/v10"
 )
 
-type Controller struct {
-	repo *Repo
+type ProjectController struct {
 }
 
-func NewController(repo *Repo) *Controller {
-	return &Controller{
-		repo: repo,
-	}
+func NewProjectController(repo *Repo) *ProjectController {
+	return &ProjectController{}
 }
 
 func (c *Controller) getOne(_ context.Context, req *GetOneRequest) (*GetOneResponse, error) {

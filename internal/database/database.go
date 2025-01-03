@@ -1,24 +1,45 @@
-package migrations
+package database
 
 import (
-	"git-project-management/internal/activity"
-	"git-project-management/internal/notification"
-	"git-project-management/internal/project"
-	"git-project-management/internal/task"
-	"git-project-management/internal/user"
+	"git-project-management/config"
+	"git-project-management/internal/types"
 	"log"
+	"sync"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/go-pg/pg/v10/orm"
 )
 
-func Migrate(db *pg.DB) error {
+var (
+	db   *pg.DB
+	once sync.Once
+)
+
+func GetDB() *pg.DB {
+
+	config := config.GetConfig()
+	once.Do(func() {
+		db = pg.Connect(&pg.Options{
+			Addr:     config.PG_HOST,
+			User:     config.PG_USER,
+			Password: config.PG_PASSWORD,
+			Database: config.PG_DATABASE,
+		})
+
+		migrate(db)
+
+	})
+
+	return db
+}
+
+func migrate(db *pg.DB) error {
 	models := []interface{}{
-		(*project.ProjectEntity)(nil),
-		(*task.TaskEntity)(nil),
-		(*user.UserEntity)(nil),
-		(*notification.NotificationEntity)(nil),
-		(*activity.ActivityEntity)(nil),
+		(*types.ProjectEntity)(nil),
+		(*types.TaskEntity)(nil),
+		(*types.UserEntity)(nil),
+		(*types.NotificationEntity)(nil),
+		(*types.ActivityEntity)(nil),
 	}
 
 	for _, model := range models {

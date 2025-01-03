@@ -1,20 +1,12 @@
-package activity
+package repository
 
 import (
 	"github.com/go-pg/pg/v10"
 )
 
-type Repo struct {
-	db *pg.DB
-}
 
-func NewRepo(db *pg.DB) *Repo {
-	return &Repo{
-		db: db,
-	}
-}
 
-func (r *Repo) create(activity *ActivityEntity) (*ActivityEntity, error) {
+func (r *Repo) create(activity *type) (*ActivityEntity, error) {
 
 	_, err := r.db.Model(activity).Returning("*").Insert()
 	return activity, err

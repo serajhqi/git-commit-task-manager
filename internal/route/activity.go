@@ -1,4 +1,4 @@
-package activity
+package route
 
 import (
 	"git-project-management/internal/project"

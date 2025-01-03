@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"git-project-management/config"
-	app "git-project-management/internal"
 	"log"
 
 	"gitea.com/logicamp/lc"

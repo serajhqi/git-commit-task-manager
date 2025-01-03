@@ -1,4 +1,4 @@
-package project
+package types
 
 import (
 	"git-project-management/internal/task"
