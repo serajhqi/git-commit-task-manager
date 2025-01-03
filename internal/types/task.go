@@ -54,11 +54,11 @@ type TaskDTO struct {
 }
 
 // ---
-type GetOneRequest struct {
+type GetTaskRequest struct {
 	Id int64 `path:"id"`
 }
 
-type GetOneResponse struct {
+type GetTaskResponse struct {
 	Body TaskDTO
 }
 

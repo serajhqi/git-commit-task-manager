@@ -6,8 +6,10 @@ import (
 	"gitea.com/logicamp/lc"
 )
 
-var once sync.Once
-var configs *Config
+var (
+	once    sync.Once
+	configs *Config
+)
 
 type Config struct {
 	PORT        string `env:"PORT" default:"3000"`
@@ -20,7 +22,8 @@ type Config struct {
 
 func GetConfig() *Config {
 	once.Do(func() {
-		configs, err := lc.GetConfig[Config](&Config{})
+		var err error
+		configs, err = lc.GetConfig[Config](&Config{})
 		if err != nil {
 			panic("environment variable problems")
 		}
