@@ -40,9 +40,9 @@ func Delete[ENTITY any](ctx context.Context, id int64) error {
 	return nil
 }
 
-func ReadAll[ENTITY any](ctx context.Context) ([]ENTITY, error) {
+func ReadAll[ENTITY any](offset, limit int) ([]ENTITY, error) {
 	var entities []ENTITY
-	err := database.GetDB().Model(&entities).Context(ctx).Select()
+	err := database.GetDB().Model(&entities).Offset(offset).Limit(limit).Select()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read all records: %w", err)
 	}
