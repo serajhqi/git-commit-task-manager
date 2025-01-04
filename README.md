@@ -54,3 +54,7 @@ On each commit:
 
 
 2. Create Project
+
+
+git commit should be checked on commit
+but sending data to server should be done on push to aslo send the commit hash to server
