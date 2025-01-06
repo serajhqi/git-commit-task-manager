@@ -24,18 +24,18 @@ type TaskEntity struct {
 type TaskStatus string
 
 const (
-	TODO        TaskStatus = "todo"
-	IN_PROGRESS TaskStatus = "in_progress"
-	DONE        TaskStatus = "done"
-	CANCELED    TaskStatus = "cancelled"
+	TASK_STATUS_TODO        TaskStatus = "todo"
+	TASK_STATUS_IN_PROGRESS TaskStatus = "in_progress"
+	TASK_STATUS_DONE        TaskStatus = "done"
+	TASK_STATUS_CANCELED    TaskStatus = "cancelled"
 )
 
 type TaskPriority string
 
 const (
-	HIGH   TaskPriority = "high"
-	MEDIUM TaskPriority = "medium"
-	LOW    TaskPriority = "low"
+	TASK_PRIORITY_HIGH   TaskPriority = "high"
+	TASK_PRIORITY_MEDIUM TaskPriority = "medium"
+	TASK_PRIORITY_LOW    TaskPriority = "low"
 )
 
 type TaskDTO struct {

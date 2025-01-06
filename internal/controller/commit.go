@@ -4,12 +4,23 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"git-project-management/internal/repository"
 	"git-project-management/internal/types"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
+	"gitea.com/logicamp/lc"
 	"github.com/danielgtaylor/huma/v2"
+	"go.uber.org/zap"
 )
+
+// CommitMessage represents the parsed commit message
+type CommitMessage struct {
+	Title       string `json:"title"`       // Commit title (first line or entire message)
+	Description string `json:"description"` // Commit description (remaining lines)
+}
 
 // ValidationResult represents the detailed result of the validation
 type ValidationResult struct {
@@ -17,11 +28,11 @@ type ValidationResult struct {
 	Message    string `json:"message"`      // A message describing the validation result
 	IsNoCommit bool   `json:"is_no_commit"` // Whether the commit should be ignored (nc)
 	IsNewTask  bool   `json:"is_new_task"`  // Whether the commit is for a new task (t)
-	TaskID     string `json:"task_id"`      // The task ID (if applicable)
+	TaskID     int64  `json:"task_id"`      // The task ID (if applicable)
 	HasTimelog bool   `json:"has_timelog"`  // Whether the commit includes a timelog (l)
 	Timelog    string `json:"timelog"`      // The timelog (if applicable)
 	TaskTitle  string `json:"task_title"`   // The task title (if applicable)
-	ProjectID  string `json:"project_id"`   // The project ID (if provided)
+	ProjectID  int64  `json:"project_id"`   // The project ID (if provided)
 }
 
 type CommitController struct{}
@@ -43,46 +54,13 @@ func Commit(ctx context.Context, req *types.CommitRequest) (*struct {
 
 	// Convert the decoded byte slice to a string
 	decodedString := string(decodedData)
-
-	lines := strings.Split(decodedString, "\n")
-	lastLine := ""
-	if len(lines) > 0 {
-		lastLine = strings.TrimSpace(lines[len(lines)-1]) // Trim spaces for safety
-	}
-
-	fmt.Printf("Last line of commit message: '%s'\n", lastLine)
-
-	_ = []string{
-		lastLine,
-		"[t] task title",
-		"[t,l] task title | 2h 30m",
-		"[t,l] task title | invalid timelog",
-		"[t-8]",
-		"[t-8,l] | 1h",
-		"[t-8,l] 3h 45m",
-		"[nc]",
-		"[nc,l] | 4h",
-		"[nc,l] 5h 30m",
-		"[nc,t] task title",
-		"[nc,t,l] task title | 6h",
-		"[nc,t,l] task title | invalid timelog",
-		"[nc,t-8]",
-		"[nc,t-8,l] | 7h",
-		"[nc,t-8,l] 8h 45m",
-		"[t]",
-		"[t-8] task title",
-		"[nc,t]",
-		"[nc,t-8] task title",
-		"[t,t-8] task title", // Invalid: t and t-<task-id> coexist
-		"[nc,nc] task title", // Invalid: multiple nc
-		"[t,l,l] task title", // Invalid: multiple l
-		"[t,l] | 2.5h",       // Valid: supports decimal hours
-		"[t,l] | 150m",       // Valid: supports minutes only
-	}
+	commit, customPattern := parseCommitMessage(decodedString)
+	fmt.Printf("Last line of commit message: '%s'\n", customPattern)
+	lc.Logger.Debug("commit message", zap.Any("commit", commit))
 
 	// Validate the last line of the commit message
-	validationResult := isValidCommitLine(lastLine)
-	if validationResult.ProjectID == "" {
+	validationResult := isValidCommitLine(customPattern)
+	if validationResult.ProjectID == 0 {
 		validationResult.ProjectID = req.Body.ProjectID
 	}
 	if validationResult.IsValid {
@@ -93,11 +71,38 @@ func Commit(ctx context.Context, req *types.CommitRequest) (*struct {
 		fmt.Println("❌ Invalid")
 	}
 
-	runAction(validationResult, 1)
+	runAction(validationResult, commit, 1)
 
 	return &struct {
 		Message string "json:\"message\""
 	}{Message: response}, nil
+}
+
+func parseCommitMessage(message string) (CommitMessage, string) {
+	// Split the commit message into lines
+	lines := strings.Split(message, "\n")
+
+	// Initialize the commit message
+	var commit CommitMessage
+
+	// Extract the title (first line)
+	if len(lines) > 0 {
+		commit.Title = strings.TrimSpace(lines[0])
+	}
+
+	// Extract the description (remaining lines, excluding the custom pattern)
+	if len(lines) > 1 {
+		descriptionLines := lines[1 : len(lines)-1] // Exclude the last line (custom pattern)
+		commit.Description = strings.TrimSpace(strings.Join(descriptionLines, "\n"))
+	}
+
+	// Extract the custom pattern (last line)
+	customPattern := ""
+	if len(lines) > 0 {
+		customPattern = strings.TrimSpace(lines[len(lines)-1])
+	}
+
+	return commit, customPattern
 }
 
 func isValidCommitLine(line string) ValidationResult {
@@ -127,7 +132,14 @@ func isValidCommitLine(line string) ValidationResult {
 	projectIDRegex := regexp.MustCompile(`p-(\d+)`)
 	projectIDMatch := projectIDRegex.FindStringSubmatch(params)
 	if len(projectIDMatch) > 1 {
-		result.ProjectID = projectIDMatch[1]
+		projectID, err := parseInt64(projectIDMatch[1])
+		if err != nil {
+			return ValidationResult{
+				IsValid: false,
+				Message: fmt.Sprintf("Invalid project ID: %v", err),
+			}
+		}
+		result.ProjectID = projectID
 	}
 
 	// Check if t or t-<task-id> is present
@@ -143,7 +155,7 @@ func isValidCommitLine(line string) ValidationResult {
 	}
 
 	// 2. Check if project ID and task ID coexist
-	if result.ProjectID != "" && hasTWithID {
+	if result.ProjectID != 0 && hasTWithID {
 		return ValidationResult{
 			IsValid: false,
 			Message: "'p-<project-id>' and 't-<task-id>' cannot coexist.",
@@ -157,7 +169,14 @@ func isValidCommitLine(line string) ValidationResult {
 		taskIDRegex := regexp.MustCompile(`t-(\d+)`)
 		taskIDMatch := taskIDRegex.FindStringSubmatch(params)
 		if len(taskIDMatch) > 1 {
-			result.TaskID = taskIDMatch[1]
+			taskID, err := parseInt64(taskIDMatch[1])
+			if err != nil {
+				return ValidationResult{
+					IsValid: false,
+					Message: fmt.Sprintf("Invalid task ID: %v", err),
+				}
+			}
+			result.TaskID = taskID
 		}
 	} else if hasT {
 		result.IsNewTask = true
@@ -200,6 +219,16 @@ func isValidCommitLine(line string) ValidationResult {
 	return result
 }
 
+// parseInt64 converts a string to int64
+func parseInt64(s string) (int64, error) {
+	var result int64
+	_, err := fmt.Sscanf(s, "%d", &result)
+	if err != nil {
+		return 0, fmt.Errorf("invalid number: %s", s)
+	}
+	return result, nil
+}
+
 func isValidTimelog(timelog string) bool {
 	// Regex to match timelog format (e.g., 23h 34m, 2.5h, 150m)
 	pattern := `^(\d+h \d+m|\d+(\.\d+)?h|\d+m)$`
@@ -207,20 +236,90 @@ func isValidTimelog(timelog string) bool {
 	return matched
 }
 
-func runAction(validationResult ValidationResult, userId int64) error {
+func convertTimelogToMinutes(timelog string) (int64, error) {
+	// Regex to match hours and minutes in the timelog
+	pattern := `^(?:(\d+)h)?\s*(?:(\d+)m)?$`
+	regex := regexp.MustCompile(pattern)
+	matches := regex.FindStringSubmatch(timelog)
+
+	if len(matches) == 0 {
+		return 0, fmt.Errorf("invalid timelog format: %s", timelog)
+	}
+
+	// Extract hours and minutes
+	hoursStr := matches[1]
+	minutesStr := matches[2]
+
+	// Convert hours to minutes
+	hours := int64(0)
+	if hoursStr != "" {
+		var err error
+		hours, err = strconv.ParseInt(hoursStr, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid hours in timelog: %s", hoursStr)
+		}
+	}
+
+	// Convert minutes to minutes
+	minutes := int64(0)
+	if minutesStr != "" {
+		var err error
+		minutes, err = strconv.ParseInt(minutesStr, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid minutes in timelog: %s", minutesStr)
+		}
+	}
+
+	// Calculate total minutes
+	totalMinutes := hours*60 + minutes
+	return totalMinutes, nil
+}
+
+func runAction(validationResult ValidationResult, commit CommitMessage, userId int64) error {
 	if !validationResult.IsValid {
 		return huma.Error400BadRequest(validationResult.Message)
 	}
 
-	// check project id
-	// is it his~
-
-	if validationResult.IsNewTask {
-		// create a task with title0
-	} else {
-		// does this task belong to this project and person
+	// check project
+	_, err := repository.GetUserProject(validationResult.ProjectID, userId)
+	if err != nil {
+		lc.Logger.Error("[commit] get project error", zap.Error(err))
+		return repository.HandleError(err)
 	}
 
+	// check existing task
+	var task *types.TaskEntity
+	if !validationResult.IsNewTask {
+		task, err = repository.GetUserTask(validationResult.TaskID, userId)
+		if err != nil {
+			lc.Logger.Error("[commit] get task error", zap.Error(err))
+			return repository.HandleError(err)
+		}
+
+		_, err = repository.Update(context.Background(), task.ID, task)
+		if err != nil {
+			lc.Logger.Error("[commit] update task error", zap.Error(err))
+			return repository.HandleError(err)
+		}
+	} else {
+
+		task = &types.TaskEntity{
+			Title:      validationResult.TaskTitle,
+			Status:     types.DEFAULT_TASK_STATUS,
+			Priority:   types.DEFAUL_TASK_PRIORITY,
+			AssigneeID: userId,
+			ProjectID:  validationResult.ProjectID,
+			CreatedBy:  userId,
+			UpdatedAt:  time.Now(),
+		}
+		task, err = repository.Create(context.Background(), *task)
+		if err != nil {
+			lc.Logger.Error("[commit] failed to create new task", zap.Error(err))
+			return repository.HandleError(err)
+		}
+	}
+
+	var timelog int
 	if validationResult.HasTimelog {
 		if validationResult.Timelog == "" {
 
@@ -229,11 +328,15 @@ func runAction(validationResult ValidationResult, userId int64) error {
 		}
 	}
 
-	if validationResult.IsNoCommit {
-
-	} else {
-
+	types.ActivityEntity{
+		TaskID:      task.ID,
+		CommitHash:  ,
+		Branch:      "",
+		Title:       "",
+		Description: "",
+		Duration:    new(int),
+		CreatedBy:   0,
+		CreatedAt:   time.Time{},
 	}
-
 	return nil
 }

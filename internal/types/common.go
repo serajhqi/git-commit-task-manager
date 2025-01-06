@@ -1,5 +1,10 @@
 package types
 
+const (
+	DEFAULT_TASK_STATUS  TaskStatus   = TASK_STATUS_IN_PROGRESS
+	DEFAUL_TASK_PRIORITY TaskPriority = TASK_PRIORITY_MEDIUM
+)
+
 type GetAllRequest struct {
 	Offset int `query:"offset"`
 	Limit  int `query:"limit"`
