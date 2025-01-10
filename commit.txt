@@ -4,4 +4,4 @@ body is this one
 
 footer is the breaking change
 
-[p-22,t] simple task
+[t] simple task

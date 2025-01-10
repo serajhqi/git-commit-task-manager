@@ -20,6 +20,8 @@ import (
 type CommitMessage struct {
 	Title       string `json:"title"`       // Commit title (first line or entire message)
 	Description string `json:"description"` // Commit description (remaining lines)
+	Hash        string `json:"hash"`
+	Branch      string `json:"branch"`
 }
 
 // ValidationResult represents the detailed result of the validation
@@ -55,8 +57,9 @@ func Commit(ctx context.Context, req *types.CommitRequest) (*struct {
 	// Convert the decoded byte slice to a string
 	decodedString := string(decodedData)
 	commit, customPattern := parseCommitMessage(decodedString)
-	fmt.Printf("Last line of commit message: '%s'\n", customPattern)
-	lc.Logger.Debug("commit message", zap.Any("commit", commit))
+	commit.Hash = req.Body.CommitHash
+	commit.Branch = req.Body.Branch
+	lc.Logger.Debug("parsed message", zap.Any("customPattern", customPattern), zap.Any("commit", commit))
 
 	// Validate the last line of the commit message
 	validationResult := isValidCommitLine(customPattern)
@@ -67,14 +70,16 @@ func Commit(ctx context.Context, req *types.CommitRequest) (*struct {
 		fmt.Println("✅ Valid")
 	} else {
 		fmt.Println(validationResult)
-		fmt.Printf("Invalid commit message: %s %s\n", validationResult.Message, validationResult.ProjectID)
+		fmt.Printf("Invalid commit message: %s %d\n", validationResult.Message, validationResult.ProjectID)
 		fmt.Println("❌ Invalid")
 	}
 
-	runAction(validationResult, commit, 1)
-
+	_, _, err = runAction(validationResult, commit, 1)
+	if err != nil {
+		return nil, err
+	}
 	return &struct {
-		Message string "json:\"message\""
+		Message string `json:"message"`
 	}{Message: response}, nil
 }
 
@@ -236,7 +241,7 @@ func isValidTimelog(timelog string) bool {
 	return matched
 }
 
-func convertTimelogToMinutes(timelog string) (int64, error) {
+func convertTimelogToMinutes(timelog string) (int, error) {
 	// Regex to match hours and minutes in the timelog
 	pattern := `^(?:(\d+)h)?\s*(?:(\d+)m)?$`
 	regex := regexp.MustCompile(pattern)
@@ -251,20 +256,20 @@ func convertTimelogToMinutes(timelog string) (int64, error) {
 	minutesStr := matches[2]
 
 	// Convert hours to minutes
-	hours := int64(0)
+	hours := int(0)
 	if hoursStr != "" {
 		var err error
-		hours, err = strconv.ParseInt(hoursStr, 10, 64)
+		hours, err = strconv.Atoi(hoursStr)
 		if err != nil {
 			return 0, fmt.Errorf("invalid hours in timelog: %s", hoursStr)
 		}
 	}
 
 	// Convert minutes to minutes
-	minutes := int64(0)
+	minutes := int(0)
 	if minutesStr != "" {
 		var err error
-		minutes, err = strconv.ParseInt(minutesStr, 10, 64)
+		minutes, err = strconv.Atoi(minutesStr)
 		if err != nil {
 			return 0, fmt.Errorf("invalid minutes in timelog: %s", minutesStr)
 		}
@@ -275,16 +280,18 @@ func convertTimelogToMinutes(timelog string) (int64, error) {
 	return totalMinutes, nil
 }
 
-func runAction(validationResult ValidationResult, commit CommitMessage, userId int64) error {
+func runAction(validationResult ValidationResult, commit CommitMessage, userId int64) (*types.TaskEntity, *types.ActivityEntity, error) {
 	if !validationResult.IsValid {
-		return huma.Error400BadRequest(validationResult.Message)
+		return nil, nil, huma.Error400BadRequest(validationResult.Message)
 	}
 
 	// check project
+	fmt.Println(validationResult.ProjectID)
+	fmt.Println("------------------------")
 	_, err := repository.GetUserProject(validationResult.ProjectID, userId)
 	if err != nil {
 		lc.Logger.Error("[commit] get project error", zap.Error(err))
-		return repository.HandleError(err)
+		return nil, nil, repository.HandleError(err)
 	}
 
 	// check existing task
@@ -293,21 +300,22 @@ func runAction(validationResult ValidationResult, commit CommitMessage, userId i
 		task, err = repository.GetUserTask(validationResult.TaskID, userId)
 		if err != nil {
 			lc.Logger.Error("[commit] get task error", zap.Error(err))
-			return repository.HandleError(err)
+			return nil, nil, repository.HandleError(err)
 		}
 
 		_, err = repository.Update(context.Background(), task.ID, task)
 		if err != nil {
 			lc.Logger.Error("[commit] update task error", zap.Error(err))
-			return repository.HandleError(err)
+			return nil, nil, repository.HandleError(err)
 		}
 	} else {
 
 		task = &types.TaskEntity{
 			Title:      validationResult.TaskTitle,
 			Status:     types.DEFAULT_TASK_STATUS,
-			Priority:   types.DEFAUL_TASK_PRIORITY,
+			Priority:   types.DEFAULT_TASK_PRIORITY,
 			AssigneeID: userId,
+			Weight:     3,
 			ProjectID:  validationResult.ProjectID,
 			CreatedBy:  userId,
 			UpdatedAt:  time.Now(),
@@ -315,28 +323,29 @@ func runAction(validationResult ValidationResult, commit CommitMessage, userId i
 		task, err = repository.Create(context.Background(), *task)
 		if err != nil {
 			lc.Logger.Error("[commit] failed to create new task", zap.Error(err))
-			return repository.HandleError(err)
+			return nil, nil, repository.HandleError(err)
 		}
 	}
 
 	var timelog int
 	if validationResult.HasTimelog {
-		if validationResult.Timelog == "" {
-
-		} else {
-
-		}
+		timelog, _ = convertTimelogToMinutes(validationResult.Timelog)
 	}
 
-	types.ActivityEntity{
+	taskActivity := types.ActivityEntity{
 		TaskID:      task.ID,
-		CommitHash:  ,
-		Branch:      "",
-		Title:       "",
-		Description: "",
-		Duration:    new(int),
-		CreatedBy:   0,
-		CreatedAt:   time.Time{},
+		CommitHash:  commit.Hash,
+		Branch:      commit.Branch,
+		Title:       commit.Title,
+		Description: commit.Description,
+		Duration:    timelog,
+		CreatedBy:   userId,
 	}
-	return nil
+
+	activity, err := repository.Create(context.Background(), taskActivity)
+	if err != nil {
+		return task, nil, repository.HandleError(err)
+	}
+
+	return task, activity, nil
 }

@@ -10,7 +10,7 @@ type ActivityEntity struct {
 	Branch      string    `pg:"branch"`                   // ID of the associated task
 	Title       string    `pg:"title,notnull"`            // Action performed (e.g., "Worked On sth")
 	Description string    `pg:"description"`              // Optional description of the action
-	Duration    *int      `pg:"duration"`                 // Duration in minutes (optional for non-timelog actions)
+	Duration    int       `pg:"duration"`                 // Duration in minutes (optional for non-timelog actions)
 	CreatedBy   int64     `pg:"created_by,notnull"`       // CreatedBy of the user who performed the action
 	CreatedAt   time.Time `pg:"created_at,default:now()"` // Timestamp when the action occurred
 }

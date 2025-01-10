@@ -14,6 +14,7 @@ type TaskEntity struct {
 	Priority    TaskPriority `pg:"priority,notnull"`         // Task priority (e.g., "Low", "Medium", "High")
 	AssigneeID  int64        `pg:"assignee_id"`              // ID of the user assigned to this task
 	ProjectID   int64        `pg:"project_id,notnull"`       // ID of the project this task belongs to
+	Weight      uint         `pg:"weight"`                   // Weight for the task
 	DueDate     time.Time    `pg:"due_date"`                 // Due date for the task
 	CreatedBy   int64        `pg:"created_by"`               // User ID who created the task
 	CreatedAt   time.Time    `pg:"created_at,default:now()"` // Timestamp when the task was created

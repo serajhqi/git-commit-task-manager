@@ -19,12 +19,12 @@ func HandleError(err error) error {
 	switch {
 	// Example for "not found" error
 	case unwrappedErr != nil && unwrappedErr.Error() == "pg: no rows in result set":
-		return huma.Error404NotFound("Resouce not found")
+		return huma.Error404NotFound("Resource not found")
 
 	case errors.Is(unwrappedErr, fmt.Errorf("bad request")):
 		return huma.Error400BadRequest("invalid input provided")
 
 	default:
-		return huma.Error500InternalServerError("interal error", err)
+		return huma.Error500InternalServerError("internal error", err)
 	}
 }
