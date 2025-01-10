@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"git-project-management/config"
-	app "git-project-management/internal"
+	"git-project-management/internal/database"
+	"git-project-management/internal/route"
 	"log"
 
 	"gitea.com/logicamp/lc"
 	"github.com/danielgtaylor/huma/v2"
 	humaFiber "github.com/danielgtaylor/huma/v2/adapters/humafiber"
-	"github.com/go-pg/pg/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -38,20 +38,17 @@ func main() {
 	api := humaFiber.New(fiberApp, humaConfig)
 
 	// database init ---------
-	db := pg.Connect(&pg.Options{
-		Addr:     config.PG_HOST,
-		User:     config.PG_USER,
-		Password: config.PG_PASSWORD,
-		Database: config.PG_DATABASE,
-	})
+	db := database.GetDB()
 	defer db.Close()
-
 	if err := db.Ping(context.Background()); err != nil {
 		panic(err)
 	}
 	// ------------------------
 
-	app.Setup(&api, db)
+	route.SetupProject(api)
+	route.SetupTask(api)
+	route.SetupActivity(api)
+	route.SetupCommit(api)
 
 	log.Fatal(fiberApp.Listen(fmt.Sprintf(":%s", config.PORT)))
 }

@@ -1,4 +1,4 @@
-package task
+package types
 
 import (
 	"time"
@@ -14,6 +14,7 @@ type TaskEntity struct {
 	Priority    TaskPriority `pg:"priority,notnull"`         // Task priority (e.g., "Low", "Medium", "High")
 	AssigneeID  int64        `pg:"assignee_id"`              // ID of the user assigned to this task
 	ProjectID   int64        `pg:"project_id,notnull"`       // ID of the project this task belongs to
+	Weight      uint         `pg:"weight"`                   // Weight for the task
 	DueDate     time.Time    `pg:"due_date"`                 // Due date for the task
 	CreatedBy   int64        `pg:"created_by"`               // User ID who created the task
 	CreatedAt   time.Time    `pg:"created_at,default:now()"` // Timestamp when the task was created
@@ -24,18 +25,18 @@ type TaskEntity struct {
 type TaskStatus string
 
 const (
-	TODO        TaskStatus = "todo"
-	IN_PROGRESS TaskStatus = "in_progress"
-	DONE        TaskStatus = "done"
-	CANCELED    TaskStatus = "cancelled"
+	TASK_STATUS_TODO        TaskStatus = "todo"
+	TASK_STATUS_IN_PROGRESS TaskStatus = "in_progress"
+	TASK_STATUS_DONE        TaskStatus = "done"
+	TASK_STATUS_CANCELED    TaskStatus = "cancelled"
 )
 
 type TaskPriority string
 
 const (
-	HIGH   TaskPriority = "high"
-	MEDIUM TaskPriority = "medium"
-	LOW    TaskPriority = "low"
+	TASK_PRIORITY_HIGH   TaskPriority = "high"
+	TASK_PRIORITY_MEDIUM TaskPriority = "medium"
+	TASK_PRIORITY_LOW    TaskPriority = "low"
 )
 
 type TaskDTO struct {
@@ -54,11 +55,11 @@ type TaskDTO struct {
 }
 
 // ---
-type GetOneRequest struct {
+type GetTaskRequest struct {
 	Id int64 `path:"id"`
 }
 
-type GetOneResponse struct {
+type GetTaskResponse struct {
 	Body TaskDTO
 }
 
