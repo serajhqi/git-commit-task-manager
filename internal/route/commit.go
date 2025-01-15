@@ -8,7 +8,7 @@ import (
 )
 
 func SetupCommit(api huma.API) {
-	_ = controller.NewCommitController()
+	ctrl := controller.NewCommitController()
 
 	huma.Register(api, huma.Operation{
 		OperationID: "get-one-activity",
@@ -17,5 +17,5 @@ func SetupCommit(api huma.API) {
 		Summary:     "commit",
 		Description: "git commit",
 		Tags:        []string{"Commit"},
-	}, controller.Commit)
+	}, ctrl.Commit)
 }
