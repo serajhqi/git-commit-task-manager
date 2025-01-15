@@ -27,7 +27,6 @@ type CommitValidationResult struct {
 }
 
 // ------------------------------------
-
 type GetAllRequest struct {
 	Offset int `query:"offset"`
 	Limit  int `query:"limit"`
@@ -40,6 +39,13 @@ type CommitRequest struct {
 		CommitMessage string `json:"commit_message"`
 		CommitHash    string `json:"commit_hash"`
 		Branch        string `json:"branch"`
+	}
+}
+
+type ImportHistory struct {
+	Authorization string `header:"Authorization"`
+	Body          struct {
+		Commits []CommitMessage
 	}
 }
 

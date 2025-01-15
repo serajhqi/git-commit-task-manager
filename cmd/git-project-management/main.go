@@ -52,6 +52,7 @@ func main() {
 	route.SetupApiKey(api)
 	route.SetupTask(api)
 	route.SetupActivity(api)
+
 	api.UseMiddleware(func(ctx huma.Context, next func(huma.Context)) {
 		apiKey := ctx.Header("Authorization")
 		if apiKey == "" {

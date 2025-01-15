@@ -129,3 +129,10 @@ func (cc CommitController) Commit(ctx context.Context, req *types.CommitRequest)
 		Message string `json:"message"`
 	}{Message: response}, nil
 }
+
+func (cc CommitController) ImportHistory(ctx context.Context, req *types.ImportHistory) (*struct {
+	Message string `json:"message"`
+}, error) {
+
+	return nil, nil
+}
