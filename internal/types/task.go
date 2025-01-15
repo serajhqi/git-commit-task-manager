@@ -5,7 +5,7 @@ import (
 )
 
 type TaskEntity struct {
-	tableName   struct{}     `pg:"task"`
+	tableName   struct{}     `pg:"task,alias"`
 	ID          int64        `pg:"id,pk"`                    // Unique identifier
 	ParentID    int64        `pg:"parent_id"`                // Unique identifier
 	Title       string       `pg:"title,notnull"`            // Task title

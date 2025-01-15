@@ -40,6 +40,7 @@ func migrate(db *pg.DB) error {
 		(*types.UserEntity)(nil),
 		(*types.NotificationEntity)(nil),
 		(*types.ActivityEntity)(nil),
+		(*types.ApiKeyEntity)(nil),
 	}
 
 	for _, model := range models {

@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"git-project-management/config"
 	"git-project-management/internal/database"
+	"git-project-management/internal/repository"
 	"git-project-management/internal/route"
 	"log"
+	"net/http"
+	"time"
 
 	"gitea.com/logicamp/lc"
 	"github.com/danielgtaylor/huma/v2"
@@ -46,8 +49,31 @@ func main() {
 	// ------------------------
 
 	route.SetupProject(api)
+	route.SetupApiKey(api)
 	route.SetupTask(api)
 	route.SetupActivity(api)
+	api.UseMiddleware(func(ctx huma.Context, next func(huma.Context)) {
+		apiKey := ctx.Header("Authorization")
+		if apiKey == "" {
+			huma.WriteErr(api, ctx, http.StatusUnauthorized, "No API key provided")
+			return
+		} else {
+			apiKey, err := repository.GetApiKey(apiKey)
+			if err != nil {
+				huma.WriteErr(api, ctx, http.StatusUnauthorized, "API key not found")
+				return
+			}
+
+			if apiKey.ExpiresAt.Before(time.Now()) {
+				huma.WriteErr(api, ctx, http.StatusUnauthorized, "Renew your API key")
+				return
+			}
+
+			ctx = huma.WithValue(ctx, "user_id", apiKey.UserID)
+		}
+
+		next(ctx)
+	})
 	route.SetupCommit(api)
 
 	log.Fatal(fiberApp.Listen(fmt.Sprintf(":%s", config.PORT)))
