@@ -56,7 +56,8 @@ type TaskDTO struct {
 
 // ---
 type GetTaskRequest struct {
-	Id int64 `path:"id"`
+	Authorization string `header:"Authorization"`
+	Id            int64  `path:"id"`
 }
 
 type GetTaskResponse struct {
@@ -66,8 +67,9 @@ type GetTaskResponse struct {
 // ---
 
 type SetTaskStatusRequest struct {
-	TaskID int64 `path:"id"`
-	Body   struct {
+	Authorization string `header:"Authorization"`
+	TaskID        int64  `path:"id"`
+	Body          struct {
 		Status TaskStatus `json:"status" enum:"open,closed"`
 	}
 }

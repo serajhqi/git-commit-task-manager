@@ -2,8 +2,10 @@ module git-project-management
 
 go 1.23.2
 
+require github.com/golang-jwt/jwt/v5 v5.2.1
+
 require (
-	gitea.com/logicamp/lc v1.19.0 // indirect
+	gitea.com/logicamp/lc v1.19.4 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/IBM/sarama v1.43.3 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect

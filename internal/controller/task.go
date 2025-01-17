@@ -2,19 +2,20 @@ package controller
 
 import (
 	"context"
+	"git-project-management/internal/controller/utils"
 	"git-project-management/internal/repository"
 	"git-project-management/internal/types"
 
 	"gitea.com/logicamp/lc"
 )
 
-type TaskController struct{}
+type taskController struct{}
 
-func NewTaskController() TaskController {
-	return TaskController{}
+func NewTaskController() taskController {
+	return taskController{}
 }
 
-func AddTask(ctx context.Context, req *types.CreateTaskRequest) (*lc.RespWithBody[types.TaskDTO], error) {
+func (tc taskController) AddTask(ctx context.Context, req *types.CreateTaskRequest) (*lc.RespBody[types.TaskDTO], error) {
 
 	var createdBy int64 = 1
 
@@ -36,9 +37,19 @@ func AddTask(ctx context.Context, req *types.CreateTaskRequest) (*lc.RespWithBod
 		return nil, repository.HandleError(err)
 	}
 
-	dto := taskEntityToDTO(*taskEntity)
-	return &lc.RespWithBody[types.TaskDTO]{
-		Body: &dto,
+	return &lc.RespBody[types.TaskDTO]{
+		Body: taskEntityToDTO(*taskEntity),
+	}, nil
+}
+
+func (tc taskController) GetTask(ctx context.Context, req *types.GetTaskRequest) (*lc.RespBody[types.TaskDTO], error) {
+	taskEntity, err := repository.GetUserTask(req.Id, utils.GetCtxUserID(ctx))
+	if err != nil {
+		return nil, repository.HandleError(err)
+	}
+
+	return &lc.RespBody[types.TaskDTO]{
+		Body: taskEntityToDTO(*taskEntity),
 	}, nil
 }
 

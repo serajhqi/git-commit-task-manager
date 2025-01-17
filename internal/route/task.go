@@ -2,22 +2,23 @@ package route
 
 import (
 	"git-project-management/internal/controller"
+	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
 func SetupTask(api huma.API) {
 
-	_ = controller.NewTaskController()
+	ctrl := controller.NewTaskController()
 
-	// huma.Register(api, huma.Operation{
-	// 	OperationID: "get-one-task",
-	// 	Method:      http.MethodGet,
-	// 	Path:        "/tasks/{id}",
-	// 	Summary:     "get one task",
-	// 	Description: "",
-	// 	Tags:        []string{"Task"},
-	// }, controller.getOne)
+	huma.Register(api, huma.Operation{
+		OperationID: "get-one-task",
+		Method:      http.MethodGet,
+		Path:        "/tasks/{id}",
+		Summary:     "get task by id",
+		Description: "",
+		Tags:        []string{"Task"},
+	}, ctrl.GetTask)
 
 	// huma.Register(*api, huma.Operation{
 	// 	OperationID: "set-task-status",

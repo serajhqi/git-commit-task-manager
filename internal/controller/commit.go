@@ -7,7 +7,6 @@ import (
 	"git-project-management/internal/controller/utils"
 	"git-project-management/internal/repository"
 	"git-project-management/internal/types"
-	"strconv"
 	"time"
 
 	"gitea.com/logicamp/lc"
@@ -52,13 +51,7 @@ func (cc CommitController) Commit(ctx context.Context, req *types.CommitRequest)
 		fmt.Println("❌ Invalid")
 	}
 
-	userIdStr := ctx.Value("user_id").(string)
-	userID, err := strconv.ParseInt(userIdStr, 10, 64)
-	if err != nil {
-		lc.Logger.Error("[commit] failed to convert userId", zap.Error(err))
-		return nil, lc.SendInternalErrorResponse(err, "[commit] malformed user id")
-	}
-
+	userID := utils.GetCtxUserID(ctx)
 	// run the action ------------------------------------------------------
 	if !validationResult.IsValid {
 		return nil, huma.Error400BadRequest(validationResult.Message)

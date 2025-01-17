@@ -5,18 +5,24 @@ import (
 	"fmt"
 	"git-project-management/config"
 	"git-project-management/internal/database"
-	"git-project-management/internal/repository"
 	"git-project-management/internal/route"
+	"git-project-management/internal/types"
 	"log"
 	"net/http"
-	"time"
 
 	"gitea.com/logicamp/lc"
 	"github.com/danielgtaylor/huma/v2"
 	humaFiber "github.com/danielgtaylor/huma/v2/adapters/humafiber"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/golang-jwt/jwt/v5"
 )
+
+var jwtKey = []byte(config.GetConfig().JWT_PRIVATE_KEY)
+
+func GetApi() {
+
+}
 
 func main() {
 	config, _ := lc.GetConfig[config.Config](&config.Config{})
@@ -47,35 +53,35 @@ func main() {
 		panic(err)
 	}
 	// ------------------------
+	route.SetupUser(api)
+	route.SetupCommit(api)
 
+	api.UseMiddleware(func(ctx huma.Context, next func(huma.Context)) {
+		authHeader := ctx.Header("Authorization")
+
+		if authHeader == "" {
+			huma.WriteErr(api, ctx, http.StatusUnauthorized, "Authorization header missing")
+			return
+		}
+		tokenString := authHeader[len("Bearer "):]
+
+		claims := &types.Claims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+
+		if err != nil || !token.Valid {
+			huma.WriteErr(api, ctx, http.StatusUnauthorized, "Invalid token")
+			return
+		}
+
+		ctx = huma.WithValue(ctx, "user_id", claims.UserID)
+		next(ctx)
+	})
 	route.SetupProject(api)
 	route.SetupApiKey(api)
 	route.SetupTask(api)
 	route.SetupActivity(api)
-
-	api.UseMiddleware(func(ctx huma.Context, next func(huma.Context)) {
-		apiKey := ctx.Header("Authorization")
-		if apiKey == "" {
-			huma.WriteErr(api, ctx, http.StatusUnauthorized, "No API key provided")
-			return
-		} else {
-			apiKey, err := repository.GetApiKey(apiKey)
-			if err != nil {
-				huma.WriteErr(api, ctx, http.StatusUnauthorized, "API key not found")
-				return
-			}
-
-			if apiKey.ExpiresAt.Before(time.Now()) {
-				huma.WriteErr(api, ctx, http.StatusUnauthorized, "Renew your API key")
-				return
-			}
-
-			ctx = huma.WithValue(ctx, "user_id", apiKey.UserID)
-		}
-
-		next(ctx)
-	})
-	route.SetupCommit(api)
 
 	log.Fatal(fiberApp.Listen(fmt.Sprintf(":%s", config.PORT)))
 }

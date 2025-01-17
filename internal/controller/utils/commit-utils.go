@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"git-project-management/internal/types"
 	"regexp"
@@ -203,4 +206,21 @@ func ConvertTimelogToMinutes(timelog string) (int, error) {
 	// Calculate total minutes
 	totalMinutes := hours*60 + minutes
 	return totalMinutes, nil
+}
+
+func GetCtxUserID(ctx context.Context) int64 {
+	userIdStr, ok := ctx.Value("user_id").(string)
+	if !ok {
+		userID := ctx.Value("user_id").(int64)
+		return userID
+	}
+	userID, _ := strconv.ParseInt(userIdStr, 10, 64)
+	return userID
+}
+
+func ToSha256(data string) string {
+	hash := sha256.New()
+	hash.Write([]byte(data))
+	hashSum := hash.Sum(nil)
+	return hex.EncodeToString(hashSum)
 }

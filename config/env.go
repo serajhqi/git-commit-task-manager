@@ -12,12 +12,13 @@ var (
 )
 
 type Config struct {
-	PORT        string `env:"PORT" default:"3000"`
-	BASE_URL    string `env:"BASE_URL" default:""`
-	PG_HOST     string `env:"PG_HOST" default:"localhost:5432"`
-	PG_USER     string `env:"PG_USER" default:"postgres"`
-	PG_PASSWORD string `env:"PG_PASSWORD" default:"---"`
-	PG_DATABASE string `env:"PG_DATABASE" default:"postgres"`
+	PORT            string `env:"PORT" default:"3000"`
+	BASE_URL        string `env:"BASE_URL" default:""`
+	PG_HOST         string `env:"PG_HOST" default:"localhost:5432"`
+	PG_USER         string `env:"PG_USER" default:"postgres"`
+	PG_PASSWORD     string `env:"PG_PASSWORD" default:"---"`
+	PG_DATABASE     string `env:"PG_DATABASE" default:"postgres"`
+	JWT_PRIVATE_KEY string `env:"JWT_PRIVATE_KEY" default:""`
 }
 
 func GetConfig() *Config {
