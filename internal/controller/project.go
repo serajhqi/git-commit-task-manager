@@ -39,13 +39,13 @@ func AddProject(ctx context.Context, req *types.CreateProjectRequest) (*lc.RespW
 	}, nil
 }
 
-func GetProjects(ctx context.Context, req *types.GetAllRequest) (*lc.RespWithBody[[]types.ProjectDTO], error) {
+func GetProjects(ctx context.Context, req *types.GetAllRequest) (*lc.RespWithBodyPaginated[types.ProjectDTO], error) {
 
 	if req.Limit == 0 {
 		req.Limit = 10
 	}
 
-	projectEntities, err := repository.ReadAll[types.ProjectEntity](req.Offset, req.Limit)
+	projectEntities, total, err := repository.ReadAll[types.ProjectEntity](req.Offset, req.Limit)
 
 	if err != nil {
 		return nil, repository.HandleError(err)
@@ -56,19 +56,22 @@ func GetProjects(ctx context.Context, req *types.GetAllRequest) (*lc.RespWithBod
 		projects = append(projects, entityToDTO(projectEntity))
 	}
 
-	return &lc.RespWithBody[[]types.ProjectDTO]{
-		Body: &projects,
+	return &lc.RespWithBodyPaginated[types.ProjectDTO]{
+		Body: lc.PaginatedBody[types.ProjectDTO]{
+			Total: total,
+			Items: projects,
+		},
 	}, nil
 }
 
 // -----------
 
-func entityToDTO(intput types.ProjectEntity) types.ProjectDTO {
+func entityToDTO(input types.ProjectEntity) types.ProjectDTO {
 	return types.ProjectDTO{
-		ID:          intput.ID,
-		Name:        intput.Name,
-		Description: intput.Description,
-		CreatedBy:   intput.CreatedBy,
-		CreatedAt:   intput.CreatedAt,
+		ID:          input.ID,
+		Name:        input.Name,
+		Description: input.Description,
+		CreatedBy:   input.CreatedBy,
+		CreatedAt:   input.CreatedAt,
 	}
 }
