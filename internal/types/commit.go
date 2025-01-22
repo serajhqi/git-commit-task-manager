@@ -27,11 +27,6 @@ type CommitValidationResult struct {
 }
 
 // ------------------------------------
-type GetAllRequest struct {
-	Offset int `query:"offset"`
-	Limit  int `query:"limit"`
-}
-
 type CommitRequest struct {
 	Authorization string `header:"Authorization"`
 	Body          struct {

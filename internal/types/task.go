@@ -65,6 +65,17 @@ type GetTaskResponse struct {
 }
 
 // ---
+// ---
+type GetTasksRequest struct {
+	Authorization string `header:"Authorization"`
+	ProjectId     int    `path:"project_id"`
+}
+
+type GetTasksResponse struct {
+	Body TaskDTO
+}
+
+// ---
 
 type SetTaskStatusRequest struct {
 	Authorization string `header:"Authorization"`

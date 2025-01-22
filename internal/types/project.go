@@ -42,3 +42,10 @@ type CreateTaskRequest struct {
 		DueDate     time.Time    `json:"due_date,omitempty"`
 	}
 }
+
+type GetProjectTasksRequest struct {
+	Authorization string `header:"Authorization"`
+	ProjectID     int64  `path:"project_id"`
+	Offset        int    `query:"offset,minimum=0"`
+	Limit         int    `query:"limit,minimum=1,maximum=1000"`
+}
