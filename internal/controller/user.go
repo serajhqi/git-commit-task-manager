@@ -30,7 +30,7 @@ func (uc UserController) Login(ctx context.Context, req *lc.ReqWithBody[types.Lo
 		return nil, huma.Error404NotFound("incorrect email or password")
 	}
 
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(1024 * time.Hour)
 	claims := &types.Claims{
 		UserID: user.ID,
 		RegisteredClaims: jwt.RegisteredClaims{

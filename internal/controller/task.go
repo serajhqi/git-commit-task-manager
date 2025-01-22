@@ -38,7 +38,7 @@ func (tc taskController) AddTask(ctx context.Context, req *types.CreateTaskReque
 	}
 
 	return &lc.RespBody[types.TaskDTO]{
-		Body: taskEntityToDTO(*taskEntity),
+		Body: toTaskDTO(*taskEntity),
 	}, nil
 }
 
@@ -49,13 +49,13 @@ func (tc taskController) GetTask(ctx context.Context, req *types.GetTaskRequest)
 	}
 
 	return &lc.RespBody[types.TaskDTO]{
-		Body: taskEntityToDTO(*taskEntity),
+		Body: toTaskDTO(*taskEntity),
 	}, nil
 }
 
 // ---------------------
 
-func taskEntityToDTO(entity types.TaskEntity) types.TaskDTO {
+func toTaskDTO(entity types.TaskEntity) types.TaskDTO {
 	return types.TaskDTO{
 		ID:          entity.ID,
 		ParentID:    entity.ParentID,

@@ -9,7 +9,7 @@ import (
 
 func SetupProject(api huma.API) {
 
-	_ = controller.NewProjectController()
+	ctrl := controller.NewProjectController()
 
 	huma.Register(api, huma.Operation{
 		OperationID: "add-task",
@@ -18,7 +18,7 @@ func SetupProject(api huma.API) {
 		Summary:     "add project",
 		Description: "",
 		Tags:        []string{"Project"},
-	}, controller.AddProject)
+	}, ctrl.AddProject)
 
 	// huma.Register(*api, huma.Operation{
 	// 	OperationID: "get-one-project",
@@ -36,15 +36,15 @@ func SetupProject(api huma.API) {
 		Summary:     "all projects",
 		Description: "",
 		Tags:        []string{"Project"},
-	}, controller.GetProjects)
+	}, ctrl.GetProjects)
 
-	// huma.Register(*api, huma.Operation{
-	// 	OperationID: "get-all-tasks",
-	// 	Method:      http.MethodGet,
-	// 	Path:        "/projects/{project_id}/tasks",
-	// 	Summary:     "all tasks",
-	// 	Description: "",
-	// 	Tags:        []string{"Project"},
-	// }, controller.getAllTasks)
+	huma.Register(api, huma.Operation{
+		OperationID: "get-all-tasks",
+		Method:      http.MethodGet,
+		Path:        "/projects/{project_id}/tasks",
+		Summary:     "all project tasks",
+		Description: "",
+		Tags:        []string{"Project"},
+	}, ctrl.GetTasks)
 
 }
