@@ -7,7 +7,7 @@ import (
 )
 
 type UserEntity struct {
-	tableName        struct{}  `pg:"user"`
+	tableName        struct{}  `pg:"tbl_user,alias:tbl_user"`
 	ID               int64     `pg:"id,pk"`                          // Unique identifier
 	Name             string    `pg:"name,notnull"`                   // User's full name
 	Email            string    `pg:"email,notnull,unique"`           // User's email address

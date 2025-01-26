@@ -5,7 +5,7 @@ import (
 )
 
 type TaskEntity struct {
-	tableName   struct{}     `pg:"task,alias"`
+	tableName   struct{}     `pg:"tbl_task,alias:tbl_task"`
 	ID          int64        `pg:"id,pk"`                    // Unique identifier
 	ParentID    int64        `pg:"parent_id"`                // Unique identifier
 	Title       string       `pg:"title,notnull"`            // Task title
@@ -65,7 +65,6 @@ type GetTaskResponse struct {
 }
 
 // ---
-// ---
 type GetTasksRequest struct {
 	Authorization string `header:"Authorization"`
 	ProjectId     int    `path:"project_id"`
@@ -86,4 +85,10 @@ type SetTaskStatusRequest struct {
 }
 type SetTaskStatusResponse struct {
 	Body TaskDTO
+}
+
+// ---
+type GetTaskActivities struct {
+	Authorization string `header:"Authorization"`
+	TaskID        int64  `path:"id"`
 }

@@ -3,7 +3,7 @@ package types
 import "time"
 
 type NotificationEntity struct {
-	tableName  struct{}  `pg:"notification"`
+	tableName  struct{}  `pg:"tbl_notification,alias:tbl_notification"`
 	ID         int64     `pg:"id,pk"`                    // Unique identifier
 	UserID     int64     `pg:"user_id,notnull"`          // ID of the user receiving the notification
 	EntityType string    `pg:"entity_type,notnull"`      // Type of entity triggering the notification (e.g., "Task", "Project")

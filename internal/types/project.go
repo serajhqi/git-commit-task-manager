@@ -5,7 +5,7 @@ import (
 )
 
 type ProjectEntity struct {
-	tableName   struct{}  `pg:"project"`
+	tableName   struct{}  `pg:"tbl_project,alias:tbl_project"`
 	ID          int64     `pg:"id,pk"`                    // Unique identifier
 	Name        string    `pg:"name,notnull"`             // Project name
 	Description string    `pg:"description"`              // Optional project description

@@ -3,7 +3,7 @@ package types
 import "time"
 
 type ActivityEntity struct {
-	tableName   struct{}  `pg:"activity"`
+	tableName   struct{}  `pg:"tbl_activity,alias:tbl_activity"`
 	ID          int64     `pg:"id,pk"`                    // Unique identifier
 	TaskID      int64     `pg:"task_id,notnull"`          // ID of the associated task
 	CommitHash  string    `pg:"commit_hash"`              // ID of the associated task

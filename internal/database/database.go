@@ -54,11 +54,11 @@ func migrate(db *pg.DB) error {
 
 	// Create indexes
 	indexQueries := []string{
-		"CREATE INDEX IF NOT EXISTS idx_task_project_id ON task(project_id)",
-		"CREATE INDEX IF NOT EXISTS idx_task_assignee_id ON task(assignee_id)",
-		"CREATE INDEX IF NOT EXISTS idx_notification_user_id ON notification(user_id)",
-		"CREATE INDEX IF NOT EXISTS idx_activity_task_id ON activity(task_id)",
-		"CREATE INDEX IF NOT EXISTS idx_activity_created_by ON activity(created_by)",
+		"CREATE INDEX IF NOT EXISTS idx_task_project_id ON tbl_task(project_id)",
+		"CREATE INDEX IF NOT EXISTS idx_task_assignee_id ON tbl_task(assignee_id)",
+		"CREATE INDEX IF NOT EXISTS idx_notification_user_id ON tbl_notification(user_id)",
+		"CREATE INDEX IF NOT EXISTS idx_activity_task_id ON tbl_activity(task_id)",
+		"CREATE INDEX IF NOT EXISTS idx_activity_created_by ON tbl_activity(created_by)",
 	}
 
 	for _, query := range indexQueries {
