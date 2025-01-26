@@ -53,6 +53,10 @@ func (tc taskController) GetTask(ctx context.Context, req *types.GetTaskRequest)
 	}, nil
 }
 
+func (tc taskController) GetTaskActivities(ctx context.Context, req *types.GetTaskActivities) (*lc.RespBody[types.ActivityDTO], error) {
+	return nil, nil
+}
+
 // ---------------------
 
 func toTaskDTO(entity types.TaskEntity) types.TaskDTO {

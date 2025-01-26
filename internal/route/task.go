@@ -20,6 +20,15 @@ func SetupTask(api huma.API) {
 		Tags:        []string{"Task"},
 	}, ctrl.GetTask)
 
+	huma.Register(api, huma.Operation{
+		OperationID: "get-task-activities",
+		Method:      http.MethodGet,
+		Path:        "/tasks/{id}/activities",
+		Summary:     "get task activities",
+		Description: "",
+		Tags:        []string{"Task"},
+	}, ctrl.GetTaskActivities)
+
 	// huma.Register(*api, huma.Operation{
 	// 	OperationID: "set-task-status",
 	// 	Method:      http.MethodPut,
